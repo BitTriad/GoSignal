@@ -8,6 +8,7 @@ GoSignal is a Slack-native launch readiness agent for the Slack Agent Builder Ch
 - Deterministic classification for blockers, rollback risk, sign-offs, dependencies, and ambiguity.
 - Markdown canvas generation for the durable launch brief.
 - Block Kit message rendering for readiness boards, blockers, and actions.
+- Optional Cerebras-backed natural summaries and DM answers with deterministic fallback.
 - App Home listing of recent launches and rerun actions.
 - In-memory storage by default with a Postgres adapter for hosted deployment.
 - Azure-ready Postgres configuration with optional TLS settings.
@@ -31,6 +32,18 @@ GoSignal is a Slack-native launch readiness agent for the Slack Agent Builder Ch
 5. Import `manifest.json` into Slack or use Slack CLI to wire the app to your workspace.
 6. Create an app-level token and keep `Socket Mode` enabled for the easiest local setup.
 7. Before Marketplace-style distribution, switch the app to HTTP mode with request URLs instead of Socket Mode.
+
+### Optional LLM mode
+
+- Keep `ENABLE_LLM_SUMMARIES=false` to use the deterministic provider only.
+- To enable more natural summaries and DM answers, set:
+  - `ENABLE_LLM_SUMMARIES=true`
+  - `LLM_PROVIDER=cerebras`
+  - `CEREBRAS_API_KEY`
+  - Optional `CEREBRAS_MODEL`, `CEREBRAS_BASE_URL`, and `CEREBRAS_REASONING_EFFORT`
+- Recommended for GoSignal: `CEREBRAS_REASONING_EFFORT=none`. This app needs concise, grounded launch summaries, not long hidden reasoning traces that can consume the whole completion budget.
+- Run `npm run check:llm` to verify the exact Cerebras path GoSignal uses in production. The check fails if GoSignal falls back to deterministic output.
+- The deterministic readiness engine still decides launch state, blockers, and approvals. The LLM only rewrites those results into more natural language and answers follow-up questions from the stored launch record.
 
 ### Slack CLI notes
 
@@ -94,4 +107,4 @@ Use Azure Database for PostgreSQL Flexible Server for GoSignal.
 
 - v1 is intentionally public-first for retrieval. Real-time Search results are only used when a user-triggered action provides an action token and the context is public-channel safe.
 - The canvas is markdown-only by design. Interactive state stays in messages and App Home.
-- The default LLM provider is deterministic and evidence-backed. No external model is required for the MVP.
+- The default provider is deterministic and evidence-backed. Cerebras is optional for natural summaries and DM answers.

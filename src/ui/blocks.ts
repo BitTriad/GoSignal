@@ -33,7 +33,7 @@ function button(actionId: string, text: string, value: string, style?: "primary"
   };
 }
 
-export function buildLaunchBlocks(launch: LaunchRecord): SlackBlock[] {
+export function buildLaunchBlocks(launch: LaunchRecord, responseText = launch.decision.summary): SlackBlock[] {
   const topBlocker = launch.blockers.find((blocker) => blocker.status === "open");
   const missingApproval = launch.approvals.find((approval) => approval.state !== "approved");
 
@@ -62,7 +62,7 @@ export function buildLaunchBlocks(launch: LaunchRecord): SlackBlock[] {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*Recommendation:* ${launch.decision.recommendation}\n*Summary:* ${launch.decision.summary}\n*Next action:* ${launch.decision.nextAction}`
+        text: `*Recommendation:* ${launch.decision.recommendation}\n*Summary:* ${responseText}\n*Next action:* ${launch.decision.nextAction}`
       }
     },
     {
@@ -105,13 +105,17 @@ export function buildLaunchBlocks(launch: LaunchRecord): SlackBlock[] {
   ];
 }
 
-export function buildDmReplyBlocks(launch: LaunchRecord): SlackBlock[] {
+export function buildLaunchBlocksWithResponse(launch: LaunchRecord, responseText: string): SlackBlock[] {
+  return buildLaunchBlocks(launch, responseText);
+}
+
+export function buildDmReplyBlocks(launch: LaunchRecord, responseText = launch.decision.summary): SlackBlock[] {
   return [
     {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `Here is the latest GoSignal view for *${launch.name}*.\n${launch.decision.summary}`
+        text: `Here is the latest GoSignal view for *${launch.name}*.\n${responseText}`
       }
     },
     {

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { evaluateLaunchReadiness } from "../src/domain/readiness.ts";
-import { buildDmReplyBlocks, buildLaunchBlocks, buildSignoffRequestText } from "../src/ui/blocks.ts";
+import { buildDmReplyBlocks, buildLaunchBlocksWithResponse, buildSignoffRequestText } from "../src/ui/blocks.ts";
 
 const launch = evaluateLaunchReadiness({
   key: {
@@ -25,15 +25,16 @@ const launch = evaluateLaunchReadiness({
 });
 
 test("buildLaunchBlocks includes action buttons", () => {
-  const blocks = buildLaunchBlocks(launch);
+  const blocks = buildLaunchBlocksWithResponse(launch, "Custom answer");
   const actions = blocks.find((block) => block.type === "actions");
   assert.ok(actions);
 });
 
 test("buildDmReplyBlocks includes summary text", () => {
-  const blocks = buildDmReplyBlocks(launch);
+  const blocks = buildDmReplyBlocks(launch, "Natural reply");
   const section = blocks.find((block) => block.type === "section");
   assert.ok(section);
+  assert.match(String((section as { text?: { text?: string } }).text?.text), /Natural reply/);
 });
 
 test("buildSignoffRequestText includes a concrete reply template", () => {

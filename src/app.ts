@@ -7,7 +7,7 @@ import type { LaunchRepository } from "./repositories/launchRepository.ts";
 import { registerHandlers } from "./handlers/registerHandlers.ts";
 import { HomeService } from "./services/homeService.ts";
 import { LaunchService } from "./services/launchService.ts";
-import { DeterministicSummaryProvider } from "./services/llmProvider.ts";
+import { CerebrasLLMProvider, DeterministicSummaryProvider, type LLMProvider } from "./services/llmProvider.ts";
 import { SlackCanvasGateway, SlackSearchSource, SlackThreadSource } from "./services/slackSources.ts";
 
 export async function createGoSignalApp(config: AppConfig): Promise<{ app: App; repository: LaunchRepository }> {
@@ -22,6 +22,8 @@ export async function createGoSignalApp(config: AppConfig): Promise<{ app: App; 
   if (config.useSocketMode && !config.slackAppToken) {
     throw new Error("SLACK_APP_TOKEN is required when USE_SOCKET_MODE=true");
   }
+
+  const summaryProvider = createSummaryProvider(config);
 
   const appOptions = {
     token: config.slackBotToken,
@@ -44,7 +46,7 @@ export async function createGoSignalApp(config: AppConfig): Promise<{ app: App; 
     threadSource: new SlackThreadSource(),
     searchSource: new SlackSearchSource(),
     canvasGateway: new SlackCanvasGateway(),
-    summaryProvider: new DeterministicSummaryProvider()
+    summaryProvider
   });
 
   registerHandlers(app, {
@@ -57,4 +59,24 @@ export async function createGoSignalApp(config: AppConfig): Promise<{ app: App; 
     app,
     repository
   };
+}
+
+function createSummaryProvider(config: AppConfig): LLMProvider {
+  const deterministic = new DeterministicSummaryProvider();
+
+  if (!config.enableLlmSummaries) {
+    return deterministic;
+  }
+
+  if (config.llmProvider === "cerebras" && config.cerebrasApiKey) {
+    return new CerebrasLLMProvider({
+      apiKey: config.cerebrasApiKey,
+      model: config.cerebrasModel,
+      baseUrl: config.cerebrasBaseUrl,
+      reasoningEffort: config.cerebrasReasoningEffort,
+      fallback: deterministic
+    });
+  }
+
+  return deterministic;
 }

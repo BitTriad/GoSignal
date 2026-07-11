@@ -80,6 +80,10 @@ export class LaunchService {
     return this.dependencies.repository.findLatestByUser(input.workspaceId, input.userId);
   }
 
+  async answerLaunchQuestion(launch: LaunchRecord, question: string): Promise<string> {
+    return this.dependencies.summaryProvider.answerLaunchQuestion(launch, question);
+  }
+
   async rerunLaunch(client: WebClient, launchId: string): Promise<LaunchRecord | undefined> {
     const launch = await this.dependencies.repository.findById(launchId);
     if (!launch) {

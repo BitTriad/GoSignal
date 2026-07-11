@@ -155,12 +155,13 @@ export function registerHandlers(app: App, dependencies: GoSignalHandlersDepende
         userId: event.user,
         actionToken
       });
+      const responseText = await dependencies.launchService.answerLaunchQuestion(launch, event.text);
 
       await client.chat.postMessage({
         channel: event.channel,
         thread_ts: event.thread_ts ?? event.ts,
-        text: launch.decision.summary,
-        blocks: buildLaunchBlocks(launch) as never
+        text: responseText,
+        blocks: buildLaunchBlocks(launch, responseText) as never
       });
     } catch (error) {
       logger.error(error);
@@ -235,11 +236,13 @@ export function registerHandlers(app: App, dependencies: GoSignalHandlersDepende
         return;
       }
 
+      const answerText = await dependencies.launchService.answerLaunchQuestion(launch, payload.text);
+
       await client.chat.postMessage({
         channel: String(payload.channel),
         thread_ts: typeof payload.thread_ts === "string" ? payload.thread_ts : String(payload.ts),
-        text: launch.decision.summary,
-        blocks: buildDmReplyBlocks(launch) as never
+        text: answerText,
+        blocks: buildDmReplyBlocks(launch, answerText) as never
       });
     } catch (error) {
       logger.error(error);
